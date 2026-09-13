@@ -122,6 +122,14 @@ that produced them and nothing else. Tokenised equities are tokens that track a
 reference price; they are not the underlying securities and this repository never
 treats them as such.
 
+## A note on the field names
+
+Some identifiers in the API are Italian — `perche` (why), `esito` (verdict),
+`bracci` (arms), `data-numero` on the page anchors. They are the real names of
+real things in a running system, and renaming them to make a document tidier
+would mean this repository documented something other than what is deployed.
+Each one is glossed where it first appears.
+
 ## Layout
 
 ```

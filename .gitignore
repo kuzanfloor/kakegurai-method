@@ -1,3 +1,8 @@
 node_modules/
 *.log
 .DS_Store
+
+# Il check di separazione lo pretende, e la regola va scritta SENZA slash:
+# `git check-ignore private` non combacia con `private/` finche la directory
+# non esiste su disco, quindi il controllo passerebbe per caso.
+private
