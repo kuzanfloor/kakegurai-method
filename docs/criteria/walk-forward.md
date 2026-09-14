@@ -1,9 +1,15 @@
 # Walk-forward on tokenised equities — the criterion, written FIRST
 
-> Written **2026-09-12, 19:0x UTC**, and committed **before** the measurement ran.
-> That order is the only thing that makes the result a measurement rather than a
-> confirmation: a criterion written after seeing the outcome is fitted to it and
-> approves anything.
+> Committed **2026-09-12 at 19:00:08 UTC** (`1b77216`), **before** the
+> measurement ran; the result landed eleven minutes later, at **19:11:30 UTC**
+> (`dd702ed`). That order is the only thing that makes the result a measurement
+> rather than a confirmation: a criterion written after seeing the outcome is
+> fitted to it and approves anything.
+>
+> ⚠️ Both commits are in the closed repository, so that pair of times is an
+> assertion you cannot audit from here. What you can audit is below and in
+> `walkforward.json`: the gates, the killers, and whether the verdict follows
+> from the numbers.
 
 ## The question
 
