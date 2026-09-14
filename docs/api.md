@@ -105,9 +105,9 @@ and whoever checks it are reading the same document.
 {
   "generated": "2026-09-14T21:35:04.118Z",
   "version": "1",
-  "source": "kakegurai.db — re-measured, not copied from the page",
-  "confidence": "high",
-  "dataAgeSec": 0,
+  "source": "docs/numeri-pubblicati.json — the nightly manifest, same build as the page",
+  "confidence": "medium",
+  "dataAgeSec": 86404,
   "data": {
     "diploma-1-lancio":  { "valore": 1.87,     "unita": "%",    "tolleranza": 0.3   },
     "diploma-2-4":       { "valore": 1.45,     "unita": "%",    "tolleranza": 0.3   },
@@ -118,7 +118,7 @@ and whoever checks it are reading the same document.
     "corpus-maturi":     { "valore": 117657,   "unita": "",     "tolleranza": 0     },
     "scambi-recuperati": { "valore": 2988036,  "unita": "",     "tolleranza": 0     }
   },
-  "note": "..."
+  "note": "copied from the nightly manifest, re-measured 2026-09-13"
 }
 ```
 
@@ -132,18 +132,48 @@ exists because breaking it makes the check pass when it should not:
    in the map and anchored nowhere is a build that succeeded while dropping the
    block it was supposed to render. Both are reported as disagreements, and the
    second is the one source review cannot catch.
-3. **`valore` is re-measured at generation time, never copied from the page.**
-   Copying makes the comparison agree with itself: it would still catch a hand
-   edit or a dropped block, but never a figure that has drifted away from what
-   the data now says. If for some figure it must be copied, say so in `note` —
-   the reader is owed the difference between *checked* and *echoed*.
+3. **`valore` comes from a re-measurement, and `note` says WHEN that
+   re-measurement ran.** Two shapes are admissible, and the difference matters to
+   the reader rather than to the generator:
+
+   - *re-measured at generation time* — the strong form: the figure agrees with
+     what the data says right now.
+   - *copied from the nightly manifest* — **the shape this site uses.** The
+     re-measurement reads millions of rows and takes minutes, so it runs in the
+     evening and writes a manifest; the page and this endpoint are then built
+     together from that one manifest. `note` must carry the date it ran:
+     `"copied from the nightly manifest, re-measured 2026-09-13"`.
+
+   Be clear about what the second shape still catches and what it cannot. It
+   catches a hand-edited figure, an anchor whose key stopped matching, and a
+   build that rendered the page while dropping a block — which is most of what
+   goes wrong. It **cannot** catch drift since the last re-measurement, because
+   both sides carry the same snapshot and cannot disagree about it by
+   construction. That gap is covered by a different check, not by this one: the
+   envelope's `generated` against your clock, which is what the stale outcome is
+   for.
+
+   What is not admissible is silence about which of the two it is. A contract the
+   generator cannot honour is one more promise to break — but a reader who cannot
+   tell *checked* from *echoed* has been handed a number and told it was
+   verified, which is worse.
+
+   ⚠️ **And under the manifest shape `dataAgeSec` is the age of the MANIFEST, not
+   zero.** A file built tonight from figures measured last night is not seconds
+   old, and writing `0` there would assert a freshness the numbers do not have —
+   the exact defect `status.json` had. `confidence` then follows from that age by
+   the same rule as every other envelope, computed and never chosen.
 4. **`unita` is the exact suffix the page prints after the digits** — `"%"`,
    `" ETH"` with its leading space, or `""`. It is used to strip the rendering,
    nothing more.
-5. **`tolleranza` is absolute, in the same unit, and never negative.** `0` means
-   exact equality and is only right for a figure that cannot move between two
-   generations; a growing count published with a zero tolerance raises an alarm
-   every evening, and an alarm that always fires is one nobody reads.
+5. **`tolleranza` is absolute, in the same unit, and never negative.** What `0`
+   means depends on which shape of rule 3 you are in. Under the **manifest**
+   shape it is correct even for a figure that grows without stopping — the two
+   counts above are corpus sizes, and page and endpoint carry the same snapshot
+   of them, so any difference at all is a defect. Under **re-measurement at
+   generation time** a zero tolerance is right only for a figure that cannot move
+   between two generations: a growing count there raises an alarm every evening,
+   and an alarm that always fires is one nobody reads.
 6. **`data: null` when the re-measurement could not run.** Never `{}`, never a
    map of zeros. The tool then reports *could not look* — which is the truth —
    instead of *everything agrees*, which is not.
