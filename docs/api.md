@@ -74,6 +74,22 @@ curl -s https://kakegurai.xyz/api/flywheel.json | jq '.data | {politica, eseguit
 If a field you expect is missing, check `data` for `null` before assuming a bug:
 the absence is usually the answer.
 
+### What `walkforward` does not publish, on purpose
+
+The endpoint carries **how many** candidate thresholds the selection had to
+choose from, and the fact that the choice is remade for every day out of sample.
+**It does not carry the values.** Entry thresholds are not published: bots on
+this chain buy within a second of a launch, and a threshold is the one thing that
+turns a description of the method into an instruction for copying it.
+
+If you are holding an older copy of this file that still lists them, they were
+removed deliberately. Nothing here depends on them: `verify/check.mjs` reads only
+`nome`, `operazioni`, `mediaPct`, `ic95` and `esito` from each arm, and the
+criteria in [`criteria/`](criteria/) describe how a threshold is chosen without
+ever naming one. **What you lose is the ability to re-run the selection
+yourself; what you keep is the ability to check that the verdict follows from
+the interval** — which is the claim this repository actually makes.
+
 ## `numeri` — the contract, written before the endpoint exists
 
 Every figure on the page sits in `<span data-numero="id">value</span>`. Until
