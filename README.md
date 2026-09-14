@@ -26,11 +26,10 @@ It watches two venues on Robinhood Chain (chain id 4663):
 - **Pons**, a bonding-curve launchpad, where new tokens are born and die;
 - a book of **37 tokenised equities**, each tracking the price of a real stock.
 
-It wants to play all of them. What stops it is arithmetic. For every candidate it
-computes what the position is worth, how much of the bankroll the measurement
-justifies, and stakes exactly that. Three outcomes, and they are not the same:
+It wants to play all of them. What stops it is arithmetic. The design has three
+outcomes, and they are not the same:
 
-| the measurement says | the agent stakes |
+| the measurement says | the design stakes |
 |---|---|
 | there is an edge, proven out of sample | a real position, sized by fractional Kelly and discounted by how wide the confidence interval is |
 | nobody knows yet | the smallest stake that buys one more sample — **this loses money on average, and it is a measurement cost, not a bet** |
@@ -39,6 +38,17 @@ justifies, and stakes exactly that. Three outcomes, and they are not the same:
 That last row is the one most systems get wrong. "No measured edge" and "a
 measured negative edge" both produce a Kelly of zero, and treating them alike
 means paying a 4% round trip to re-confirm a loss you already measured.
+
+🔴 **Today only the middle row runs, and the table above is a design rather than
+a description.** Every stake the running session has placed is the exploration
+minimum — 0.02 ETH, a constant — by construction, because no edge is proven and
+the middle row is exactly what "nobody knows yet" costs. **The sizer exists, it
+is tested, and the running session has never called it**: fractional Kelly lives
+in the backtest and in the design, not in any stake that has been placed. Until
+the first row fires, saying "the agent sizes each hand from measured edge" would
+describe a branch that has never executed — and the distance between a plan and
+a behaviour is the kind of thing this repository is supposed to state rather than
+blur.
 
 ## Why any of this is checkable
 
@@ -138,9 +148,15 @@ curl -s https://kakegurai.xyz/api/walkforward.json | jq .data
 
 At the time of writing the agent runs **in paper mode**. It places no real
 orders, and every public surface says so on every post. One strategy of eight is
-trading on paper and being scored on days it has never seen; the other seven are
-switched off by measurements that are published with the number that switched
-them off.
+trading on paper and being scored on days it has never seen.
+
+The other seven are not off for one reason, and summarising them as one would be
+the convenient sentence rather than the true one: **three were measured to lose**
+— each published with the number that decided it — and **four never got enough
+data to decide anything**, having fired too few times, or no times at all, to
+produce a measurement. "Measured to lose" and "never sampled" both stop a
+strategy, and merging them is the same mistake as merging `0` with `null`, one
+level up.
 
 Nothing here has proven an edge yet. The out-of-sample verdict is **not yet
 proven** — not *failed*, and not *passed* — and the criterion for deciding was
