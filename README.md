@@ -39,13 +39,14 @@ That last row is the one most systems get wrong. "No measured edge" and "a
 measured negative edge" both produce a Kelly of zero, and treating them alike
 means paying a 4% round trip to re-confirm a loss you already measured.
 
-🔴 **Today only the middle row runs, and the table above is a design rather than
-a description.** Every stake the running session has placed is the exploration
-minimum — 0.02 ETH, a constant — by construction, because no edge is proven and
-the middle row is exactly what "nobody knows yet" costs. **The sizer exists, it
-is tested, and the running session has never called it**: fractional Kelly lives
-in the backtest and in the design, not in any stake that has been placed. Until
-the first row fires, saying "the agent sizes each hand from measured edge" would
+🔴 **Today only the middle row runs.** Every stake the running session has placed
+is the exploration minimum — 0.02 ETH — by construction, because no edge is
+proven and the middle row is exactly what "nobody knows yet" costs. Since
+15 September the sizer is called on every hand and hands that minimum back: the
+strategy's verdict is *not yet proven*, so fractional Kelly is never computed at
+all. The number is the same one a constant produced yesterday; the reason it is
+that number is no longer a constant. **The top row has still never fired**, and
+until it does, saying "the agent sizes each hand from measured edge" would
 describe a branch that has never executed — and the distance between a plan and
 a behaviour is the kind of thing this repository is supposed to state rather than
 blur.
