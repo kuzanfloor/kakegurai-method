@@ -182,10 +182,12 @@ say today: [`/api/walkforward.json`](https://kakegurai.xyz/api/walkforward.json)
 
 ## The token
 
-⚠️ **There is no token yet.** The ticker will be `$KAKE`; nothing is deployed,
-no contract address exists, and this section describes a mechanism that is built
-and tested rather than one that is running. Saying so here costs nothing and is
-the difference between a plan and a claim.
+`$KAKE` is deployed on Robinhood Chain at `0x4Dd32923035DD81dc9f3BC87FcD4E3e7eb38B78a`.
+
+⚠️ **The mechanism below is built and tested, and it has not run.** Nothing has
+been bought and nothing has been burned, because the agent trades on paper and
+the circuit refuses simulated profit by construction. The token existing and the
+circuit turning are two different events, and this repository will not blur them.
 
 **And the desk is not funded by launching it.** Before deploying anything on this
 chain we measured whether launching there pays the launcher: it does not — curve
@@ -194,8 +196,7 @@ an ETH in its whole life. Six checks, a declared falsification, and the parts yo
 cannot check from here are listed as such:
 [`docs/deployer-fees.md`](docs/deployer-fees.md).
 
-When it exists, it works like this, and the share is declared rather than
-described:
+It works like this, and the share is declared rather than described:
 
 1. the agent closes a position in profit;
 2. only what sits above the high-water mark counts — recovering a loss earns
