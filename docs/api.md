@@ -18,7 +18,7 @@ https://kakegurai.xyz/api/<name>.json
 | `decisioni` | the journal: what the agent decided and why, refusals included |
 | `flywheel` | realised profit, the declared buyback share, what was bought and burned |
 | `salute` | whether the samplers are still writing |
-| `numeri` | the figures anchored on the page, with the tolerance inside which each is still true — **not served yet**, see below |
+| `numeri` | the figures anchored on the page, with the tolerance inside which each is still true — served since 2026-09-17, see below |
 
 ## The envelope
 
@@ -90,16 +90,18 @@ ever naming one. **What you lose is the ability to re-run the selection
 yourself; what you keep is the ability to check that the verdict follows from
 the interval** — which is the claim this repository actually makes.
 
-## `numeri` — the contract, written before the endpoint exists
+## `numeri` — the contract, written before the endpoint existed
 
-Every figure on the page sits in `<span data-numero="id">value</span>`. Until
-this endpoint is served **nothing outside the project can check those figures**:
-they are cohort rates and curve fees, and no other endpoint carries them. That
-is why `verify/check.mjs` reports *could not look* and exits 2 rather than
-passing — the comparison is not merely unwritten, from outside it is impossible.
+Every figure on the page sits in `<span data-numero="id">value</span>`. These
+are cohort rates and curve fees, and no other endpoint carries them: until this
+one was served, **nothing outside the project could check those figures** — the
+comparison was not merely unwritten, from outside it was impossible, and
+`verify/check.mjs` reported *could not look* and exited 2 rather than passing.
 
-This is the shape it expects. It is written here first so that whoever builds it
-and whoever checks it are reading the same document.
+✅ **Served since 2026-09-17.** The contract below was written before the
+endpoint existed, and is left in that tense on purpose: it is the reason the
+thing that got built and the thing that checks it agree, rather than a
+description written afterwards to match whatever shipped.
 
 ```jsonc
 {

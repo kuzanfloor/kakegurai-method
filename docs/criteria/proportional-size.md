@@ -3,7 +3,9 @@
 > Committed **2026-09-12 at 22:28:37 UTC** (`bd4ab63`), **before** the
 > measurement ran; the result landed at **22:39:49 UTC** (`1829b9f`). Third
 > pre-registered criterion of that day, after [`walk-forward.md`](walk-forward.md)
-> (not yet proven) and [`capacity.md`](capacity.md) (holds, capacity small).
+> and [`capacity.md`](capacity.md) (holds, capacity small). *Walk-forward read
+> "not yet proven" on the day this line was written; it resolved and passed on
+> 2026-09-16 — see the live endpoint rather than this sentence.*
 >
 > ⚠️ Both commits are in the closed repository, so the order is an assertion you
 > cannot audit from here.

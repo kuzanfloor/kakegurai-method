@@ -94,9 +94,14 @@ compared none of them, because no endpoint carried them; and it passed fifteen
 checks out of fifteen against a page that had been frozen on the domain for
 nineteen hours, because it never compared `generated` with a clock. Both defects
 were in the verifier, on the one promise a third party can check without trusting
-us. It is fixed, and `/api/numeri.json` does not exist yet — so **the tool now
-reports "could not look" and exits 2 instead of passing.** Failing closed on what
-it cannot read is the whole point.
+us. It was fixed by failing closed: with no `/api/numeri.json` to read, the tool
+reported "could not look" and exited 2 rather than passing.
+
+✅ **Since 2026-09-17 the endpoint is served and the tool passes on it** — 36
+checks, 0 disagreements, exit 0. The paragraph above is kept because the defect
+is the interesting part: for nineteen hours this repository shipped a checker
+that counted instead of comparing, on the one promise you can test without
+trusting us.
 
 ## Check it yourself
 
@@ -159,15 +164,31 @@ produce a measurement. "Measured to lose" and "never sampled" both stop a
 strategy, and merging them is the same mistake as merging `0` with `null`, one
 level up.
 
-Nothing here has proven an edge yet. The out-of-sample verdict is **not yet
-proven** — not *failed*, and not *passed* — and the criterion for deciding was
-committed before the run. When it resolves, it resolves in public, in whichever
-direction it goes.
+**The out-of-sample criterion resolved on 2026-09-16, and it passed** — on a
+book of days the selection had never seen, positive on every one of them. The
+criterion was committed before the run and it resolved in public, which is what
+this section promised it would do. The day count and the trade count keep
+growing, so they are not quoted here: read them from the endpoint below.
+
+🔴 **It authorises nothing, and that was written down first too.** The criterion
+says in its own text that passing makes the direction a *candidate*: the measure
+must be repeated after five more trading days before promotion is even
+discussed. So the agent is still on paper, `0` of `8` strategies are switched on,
+and the branch that sizes from a proven edge has still never run.
+
+A criterion that authorised action the moment it went green would not be a
+criterion, it would be a starting gun with a delay. Live numbers, whatever they
+say today: [`/api/walkforward.json`](https://kakegurai.xyz/api/walkforward.json).
 
 ## The token
 
-There is a token, `$KAKEGURAI`, and a mechanism attached to it. It works like
-this, and the share is declared rather than described:
+⚠️ **There is no token yet.** The ticker will be `$KAKE`; nothing is deployed,
+no contract address exists, and this section describes a mechanism that is built
+and tested rather than one that is running. Saying so here costs nothing and is
+the difference between a plan and a claim.
+
+When it exists, it works like this, and the share is declared rather than
+described:
 
 1. the agent closes a position in profit;
 2. only what sits above the high-water mark counts — recovering a loss earns
@@ -222,8 +243,8 @@ Each one is glossed where it first appears.
 docs/method.md          how a claim becomes a number here
 docs/criteria/          the pre-registered criteria, one file per measurement,
                         plus what is withheld and why
-docs/api.md             the contract of the public endpoints, including the one
-                        that does not exist yet and what the verifier expects
+docs/api.md             the contract of the public endpoints, and what the
+                        verifier expects of each
 verify/check.mjs        pulls the live API and the page, and reports. Zero deps
 verify/checks.mjs       the comparisons, as pure functions of (API, page, clock)
 verify/checks.test.mjs  a forged page per comparison, proving each one can fail
