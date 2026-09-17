@@ -12,13 +12,13 @@ https://kakegurai.xyz/api/<name>.json
 | `status` | mode, chain head, how many strategies exist and how many run |
 | `performance` | closed paper positions, aggregated |
 | `walkforward` | the out-of-sample result, per arm, with the criterion that judges it |
-| `capacita` | the trade size at which the measured edge dies |
+| `capacity` | the trade size at which the measured edge dies |
 | `rwa` | dislocation across the tokenised-equity book |
 | `pons` | recent launches on the bonding-curve launchpad |
-| `decisioni` | the journal: what the agent decided and why, refusals included |
+| `decisions` | the journal: what the agent decided and why, refusals included |
 | `flywheel` | realised profit, the declared buyback share, what was bought and burned |
-| `salute` | whether the samplers are still writing |
-| `numeri` | the figures anchored on the page, with the tolerance inside which each is still true — served since 2026-09-17, see below |
+| `health` | whether the samplers are still writing |
+| `figures` | the figures anchored on the page, with the tolerance inside which each is still true — served since 2026-09-17, see below |
 
 ## The envelope
 
@@ -28,7 +28,7 @@ doubt:
 ```jsonc
 {
   "generated": "2026-09-13T12:52:21.367Z",  // when this file was written
-  "version": "1",
+  "version": "2",
   "source": "paper_positions + treasury_settlements",
   "confidence": "high" | "medium" | "low" | "unknown",
   "dataAgeSec": 37,        // age of the OLDEST ingredient, or null
@@ -65,10 +65,10 @@ curl -s https://kakegurai.xyz/api/status.json \
 ```bash
 # the verdict and the interval it rests on
 curl -s https://kakegurai.xyz/api/walkforward.json \
-  | jq '.data.bracci[] | {nome, operazioni, mediaPct, ic95, esito}'
+  | jq '.data.arms[] | {name, trades, meanPct, ic95, verdict}'
 
 # what the circuit has actually done
-curl -s https://kakegurai.xyz/api/flywheel.json | jq '.data | {politica, eseguitoEth, tokenBruciati}'
+curl -s https://kakegurai.xyz/api/flywheel.json | jq '.data | {policy, spentEth, tokensBurned}'
 ```
 
 If a field you expect is missing, check `data` for `null` before assuming a bug:
@@ -84,13 +84,13 @@ turns a description of the method into an instruction for copying it.
 
 If you are holding an older copy of this file that still lists them, they were
 removed deliberately. Nothing here depends on them: `verify/check.mjs` reads only
-`nome`, `operazioni`, `mediaPct`, `ic95` and `esito` from each arm, and the
+`name`, `trades`, `meanPct`, `ic95` and `verdict` from each arm, and the
 criteria in [`criteria/`](criteria/) describe how a threshold is chosen without
 ever naming one. **What you lose is the ability to re-run the selection
 yourself; what you keep is the ability to check that the verdict follows from
 the interval** — which is the claim this repository actually makes.
 
-## `numeri` — the contract, written before the endpoint existed
+## `figures` — the contract, written before the endpoint existed
 
 Every figure on the page sits in `<span data-numero="id">value</span>`. These
 are cohort rates and curve fees, and no other endpoint carries them: until this
@@ -106,19 +106,19 @@ description written afterwards to match whatever shipped.
 ```jsonc
 {
   "generated": "2026-09-14T21:35:04.118Z",
-  "version": "1",
+  "version": "2",
   "source": "docs/numeri-pubblicati.json — the nightly manifest, same build as the page",
   "confidence": "medium",
   "dataAgeSec": 86404,
   "data": {
-    "diploma-1-lancio":  { "valore": 1.87,     "unita": "%",    "tolleranza": 0.3   },
-    "diploma-2-4":       { "valore": 1.45,     "unita": "%",    "tolleranza": 0.3   },
-    "diploma-5-oltre":   { "valore": 1.18,     "unita": "%",    "tolleranza": 0.35  },
-    "tassa-1-lancio":    { "valore": 0.017681, "unita": " ETH", "tolleranza": 0.002 },
-    "tassa-2-4":         { "valore": 0.016307, "unita": " ETH", "tolleranza": 0.003 },
-    "tassa-5-oltre":     { "valore": 0.012199, "unita": " ETH", "tolleranza": 0.004 },
-    "corpus-maturi":     { "valore": 117657,   "unita": "",     "tolleranza": 0     },
-    "scambi-recuperati": { "valore": 2988036,  "unita": "",     "tolleranza": 0     }
+    "graduation-rate-1-launch":  { "value": 1.87,     "unit": "%",    "tolerance": 0.3   },
+    "graduation-rate-2-4":       { "value": 1.45,     "unit": "%",    "tolerance": 0.3   },
+    "graduation-rate-5-plus":   { "value": 1.18,     "unit": "%",    "tolerance": 0.35  },
+    "curve-tax-1-launch":    { "value": 0.017681, "unit": " ETH", "tolerance": 0.002 },
+    "curve-tax-2-4":         { "value": 0.016307, "unit": " ETH", "tolerance": 0.003 },
+    "curve-tax-5-plus":     { "value": 0.012199, "unit": " ETH", "tolerance": 0.004 },
+    "corpus-mature":     { "value": 117657,   "unit": "",     "tolerance": 0     },
+    "trades-ingested": { "value": 2988036,  "unit": "",     "tolerance": 0     }
   },
   "note": "copied from the nightly manifest, re-measured 2026-09-13"
 }
@@ -134,7 +134,7 @@ exists because breaking it makes the check pass when it should not:
    in the map and anchored nowhere is a build that succeeded while dropping the
    block it was supposed to render. Both are reported as disagreements, and the
    second is the one source review cannot catch.
-3. **`valore` comes from a re-measurement, and `note` says WHEN that
+3. **`value` comes from a re-measurement, and `note` says WHEN that
    re-measurement ran.** Two shapes are admissible, and the difference matters to
    the reader rather than to the generator:
 
@@ -165,10 +165,10 @@ exists because breaking it makes the check pass when it should not:
    old, and writing `0` there would assert a freshness the numbers do not have —
    the exact defect `status.json` had. `confidence` then follows from that age by
    the same rule as every other envelope, computed and never chosen.
-4. **`unita` is the exact suffix the page prints after the digits** — `"%"`,
+4. **`unit` is the exact suffix the page prints after the digits** — `"%"`,
    `" ETH"` with its leading space, or `""`. It is used to strip the rendering,
    nothing more.
-5. **`tolleranza` is absolute, in the same unit, and never negative.** What `0`
+5. **`tolerance` is absolute, in the same unit, and never negative.** What `0`
    means depends on which shape of rule 3 you are in. Under the **manifest**
    shape it is correct even for a figure that grows without stopping — the two
    counts above are corpus sizes, and page and endpoint carry the same snapshot
@@ -183,7 +183,7 @@ exists because breaking it makes the check pass when it should not:
    it as could-not-look, and the endpoint should carry it as `null` too.
 
 ⚠️ **One check has no anchor and should get one.** The buyback share is compared
-against `flywheel.json .data.politica.riacquistoBps`, and the tool has to find
+against `flywheel.json .data.policy.buybackBps`, and the tool has to find
 it by reading the sentence that claims it — so an innocent rewrite of that
 sentence looks like a defect. Anchoring the share as a `data-numero` would move
 it into the ordinary figure comparison and let that heuristic be deleted.

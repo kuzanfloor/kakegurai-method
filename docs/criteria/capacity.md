@@ -7,7 +7,7 @@
 >
 > ⚠️ Both commits are in the closed repository, so the order is an assertion you
 > cannot audit from here. What you can audit: the gates below, and the payload
-> at `https://kakegurai.xyz/api/capacita.json`, which carries every point of the
+> at `https://kakegurai.xyz/api/capacity.json`, which carries every point of the
 > ladder with its interval.
 
 ## The question
@@ -68,7 +68,7 @@ expanding window** — with exactly one difference: the cost. Changing anything
 else would make the two results incomparable.
 
 The size ladder, in dollars of notional per operation, is published point by
-point in `capacita.json` and runs from $100 to $50,000.
+point in `capacity.json` and runs from $100 to $50,000.
 
 ## The criterion, falsifiable
 
@@ -103,7 +103,7 @@ capacity were excellent, because the missing condition is a different one.
 
 The interval did not touch zero at the smallest size on either arm, so the gate
 that would have closed the direction did not fire. Reading the ladder in
-`capacita.json`:
+`capacity.json`:
 
 > **Capacity: no more than $500 on arm A (the 10 seed tickers), no more than
 > $250 on arm B (all 37).**
@@ -153,6 +153,6 @@ the capacity.
 ## Check it
 
 ```bash
-curl -s https://kakegurai.xyz/api/capacita.json \
-  | jq '.data | {commissionePct, modello, bracci: [.bracci[] | {nome, capacitaUsd, esito, perche}]}'
+curl -s https://kakegurai.xyz/api/capacity.json \
+  | jq '.data | {feePct, model, arms: [.arms[] | {name, capacityUsd, verdict, why}]}'
 ```

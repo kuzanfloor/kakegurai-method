@@ -21,7 +21,7 @@
  * on the domain for nineteen hours, and against eight published figures it
  * never compared to anything. Both defects were in HERE, not on the site. What
  * changed: it now dates every envelope against a clock, and it compares the
- * anchored figures with `/api/numeri.json` — and says "could not look" instead
+ * anchored figures with `/api/figures.json` — and says "could not look" instead
  * of passing while that endpoint is missing. The comparisons live in
  * `checks.mjs` so that `checks.test.mjs` can prove each one can fail.
  */
@@ -29,8 +29,8 @@
 import { controllaTutto, codiceUscita, ETA_MASSIMA_ORE } from "./checks.mjs";
 
 const BASE = process.argv[2] ?? "https://kakegurai.xyz";
-const ENDPOINTS = ["status", "performance", "flywheel", "walkforward", "capacita",
-                   "rwa", "pons", "decisioni", "salute", "numeri"];
+const ENDPOINTS = ["status", "performance", "flywheel", "walkforward", "capacity",
+                   "rwa", "pons", "decisions", "health", "figures"];
 
 const COLORI = { ok: ["\x1b[32m", "✓"], disagrees: ["\x1b[31m", "✗"], stale: ["\x1b[35m", "⌛"], unknown: ["\x1b[33m", "?"] };
 
@@ -49,7 +49,7 @@ for (const n of ENDPOINTS) {
   /* `numeri` is not listed here when it fails: the anchored-figure check names
    * it and says what its absence costs, and counting one silence twice makes a
    * site look worse than it is. */
-  catch (e) { if (n !== "numeri") mancanti.push(`${n}: ${e instanceof Error ? e.message : e}`); }
+  catch (e) { if (n !== "figures") mancanti.push(`${n}: ${e instanceof Error ? e.message : e}`); }
 }
 
 let html = null;

@@ -82,7 +82,7 @@ source says so. `null` and `0` are different claims and are never merged.
 **3. Published figures are anchored, and a verifier reads the rendered page.**
 Each figure on the site sits in a `<span data-numero="...">`. A tool reads the
 page **as served** — never the source — and checks four things against the API:
-the anchored figures against [`/api/numeri.json`](docs/api.md), the out-of-sample
+the anchored figures against [`/api/figures.json`](docs/api.md), the out-of-sample
 verdict word against `walkforward.json`, the mode label against `status.json`,
 and the declared buyback share against `flywheel.json`. It also dates every
 envelope against your own clock, because a number can be correct and useless at
@@ -94,7 +94,7 @@ compared none of them, because no endpoint carried them; and it passed fifteen
 checks out of fifteen against a page that had been frozen on the domain for
 nineteen hours, because it never compared `generated` with a clock. Both defects
 were in the verifier, on the one promise a third party can check without trusting
-us. It was fixed by failing closed: with no `/api/numeri.json` to read, the tool
+us. It was fixed by failing closed: with no `/api/figures.json` to read, the tool
 reported "could not look" and exited 2 rather than passing.
 
 ✅ **Since 2026-09-17 the endpoint is served and the tool passes on it** — 36
@@ -214,8 +214,8 @@ The source is the policy itself, and `verify/check.mjs` compares it against the
 share the site prints:
 
 ```bash
-curl -s https://kakegurai.xyz/api/flywheel.json | jq '.data.politica'
-# { "riacquistoBps": 3000, "bancaBps": 5000, "operativoBps": 2000, ... }
+curl -s https://kakegurai.xyz/api/flywheel.json | jq '.data.policy'
+# { "buybackBps": 3000, "bankrollBps": 5000, "operatingBps": 2000, ... }
 ```
 
 ⚠️ This paragraph said *"half of the remainder"* until 2026-09-14. Half of the
@@ -238,11 +238,26 @@ treats them as such.
 
 ## A note on the field names
 
-Some identifiers in the API are Italian — `perche` (why), `esito` (verdict),
-`bracci` (arms), `data-numero` on the page anchors. They are the real names of
-real things in a running system, and renaming them to make a document tidier
-would mean this repository documented something other than what is deployed.
-Each one is glossed where it first appears.
+⚠️ **They changed on 2026-09-17, and the envelope says so: `version` is now
+`2`.** Until then some identifiers were Italian — `perche`, `esito`, `bracci`,
+and the `data-numero` anchor ids — because they are the real names of real
+things in a running system, and this section argued that renaming them for
+tidiness would document something other than what is deployed.
+
+That argument was answered by a better one: a public endpoint that requires the
+house vocabulary to read is not a public endpoint. Worse, the translation had to
+live somewhere, so it lived in the reader — including in this repository's own
+verifier, which carried a table mapping `REGGE` to `HOLDS`. A checker that has
+to translate before it can compare is a checker with a private dictionary, and
+the whole claim here is that you do not need one.
+
+So the wire speaks English and the code keeps its own names, with **one** place
+that crosses between them. The three verdict words — `HOLDS`, `REJECTED`,
+`NOT YET PROVEN` — are now emitted by the API itself, and the page prints the
+word the API sends rather than deriving its own.
+
+A consumer written against version `1` breaks. That is what the version field is
+for, and it would have been dishonest to change the names and leave it at `1`.
 
 ## Layout
 

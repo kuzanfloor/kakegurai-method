@@ -55,7 +55,7 @@ Stated before the run, because this is the half people leave out:
 
 ## What the result was
 
-**Not yet proven** — `NON_LO_SO`, which is neither pass nor fail.
+**Not yet proven** — `NOT YET PROVEN`, which is neither pass nor fail.
 
 | arm | out-of-sample ops | mean | 95% interval | positive days |
 |---|---|---|---|---|
@@ -83,7 +83,7 @@ verdict **further away** — from two more trading days to three.
 
 A correction made after seeing the result is normally forbidden here. This one was
 allowed under a rule stated in advance: **a correction is admissible only if it
-does not change the decision.** It did not — the verdict was `NON_LO_SO` before
+does not change the decision.** It did not — the verdict was `NOT YET PROVEN` before
 and after — and it made our own wait longer rather than shorter. A correction that
 improves your number *and* shortens your wait is the one you must not be allowed
 to make.
@@ -112,7 +112,7 @@ read them from the endpoint below, and check the verdict follows from them.
 
 ```bash
 curl -s https://kakegurai.xyz/api/walkforward.json \
-  | jq '.data.bracci[] | {nome, giorniFuoriCampione, operazioni, mediaPct, ic95, esito, perche}'
+  | jq '.data.arms[] | {name, outOfSampleDays, trades, meanPct, ic95, verdict, why}'
 ```
 
-The `perche` field carries the gate that is holding, in the agent's own words.
+The `why` field carries the gate that is holding, in the agent's own words.

@@ -73,10 +73,10 @@ a tool that claims more than it does is the defect it exists to find.
 
 | on the page | against | today |
 |---|---|---|
-| the eight anchored figures | `/api/numeri.json`, figure by figure, inside each one's declared tolerance | **could not look** — that endpoint is not served yet, so the tool exits 2 and does *not* pass. Contract in [`api.md`](api.md) |
-| the out-of-sample verdict word | `walkforward.json .data.bracci[].esito` | compared |
-| the mode label | `status.json .data.modo` | compared |
-| the declared buyback share | `flywheel.json .data.politica.riacquistoBps` | compared |
+| the eight anchored figures | `/api/figures.json`, figure by figure, inside each one's declared tolerance | **could not look** — that endpoint is not served yet, so the tool exits 2 and does *not* pass. Contract in [`api.md`](api.md) |
+| the out-of-sample verdict word | `walkforward.json .data.arms[].verdict` | compared |
+| the mode label | `status.json .data.mode` | compared |
+| the declared buyback share | `flywheel.json .data.policy.buybackBps` | compared |
 | the age of every envelope | the clock on your machine | stale over 26 h, and that is a separate outcome from *disagrees* |
 
 **What it does not compare.** Everything on the page that is prose, every figure

@@ -16,7 +16,7 @@ import {
   controllaBusta, controllaEta, controllaWalkforward, controllaCircuito,
   confrontaAncore, confrontaVerdetto, confrontaModo, confrontaQuota,
   leggiAncore, numeroDaTesto, testoPagina, controllaTutto, codiceUscita,
-  ETA_MASSIMA_ORE, VERDETTI,
+  ETA_MASSIMA_ORE, PAROLE_VERDETTO,
 } from "./checks.mjs";
 
 const ORA = Date.parse("2026-09-14T12:00:00.000Z");
@@ -26,22 +26,22 @@ const VECCHIO = "2026-09-11T21:35:00.000Z";   // ~62 h old, a Friday close read 
 const busta = (extra = {}) => ({ generated: RECENTE, version: "1", source: "test",
   confidence: "high", dataAgeSec: 12, data: {}, ...extra });
 
-const walkforward = (esito = "NON_LO_SO") => busta({ data: { bracci: [
-  { nome: "B — all 37", operazioni: 266, mediaPct: 0.7394, ic95: [0.5985, 0.8355], esito },
+const walkforward = (verdict = "NOT YET PROVEN") => busta({ data: { arms: [
+  { name: "B — all 37", trades: 266, meanPct: 0.7394, ic95: [0.5985, 0.8355], verdict },
 ] } });
 
-const flywheel = (politica = { riacquistoBps: 3000, bancaBps: 5000, operativoBps: 2000 }) => busta({ data: {
-  modo: "PAPER", tokenComprati: "0", tokenBruciati: "0",
-  allocatoEth: 0, eseguitoEth: 0, inSospesoEth: 0, politica } });
+const flywheel = (policy = { buybackBps: 3000, bankrollBps: 5000, operatingBps: 2000 }) => busta({ data: {
+  mode: "PAPER", tokensBought: "0", tokensBurned: "0",
+  allocatedEth: 0, spentEth: 0, pendingEth: 0, policy } });
 
 const numeri = (mappa) => busta({ data: mappa ?? {
-  "diploma-1-lancio": { valore: 1.87, unita: "%", tolleranza: 0.3 },
-  "tassa-1-lancio": { valore: 0.017681, unita: " ETH", tolleranza: 0.002 },
+  "graduation-rate-1-launch": { value: 1.87, unit: "%", tolerance: 0.3 },
+  "curve-tax-1-launch": { value: 0.017681, unit: " ETH", tolerance: 0.002 },
 } });
 
-const status = (modo = "PAPER") => busta({ data: { modo, strategieTotali: 8 } });
+const status = (mode = "PAPER") => busta({ data: { mode, totalStrategies: 8 } });
 
-function pagina({ ancore = { "diploma-1-lancio": "1.87", "tassa-1-lancio": "0.017681" },
+function pagina({ ancore = { "graduation-rate-1-launch": "1.87", "curve-tax-1-launch": "0.017681" },
                   verdetto = "NOT YET PROVEN", modo = "It runs in paper mode with no real funds at risk.",
                   quota = "A declared share — 30% of it buys the token back." } = {}) {
   const righe = Object.entries(ancore).map(([id, v]) => `<span data-numero="${id}">${v}</span>`).join("\n");
@@ -130,37 +130,37 @@ test("the limit is 26 hours, and a weekend reading exceeds it on purpose", () =>
 /* ── walk-forward ────────────────────────────────────────────────────────── */
 
 test("HOLDS on an interval that crosses zero — MUST FAIL", () => {
-  const b = busta({ data: { bracci: [{ nome: "A", operazioni: 50, mediaPct: 0.2, ic95: [-0.1, 0.5], esito: "REGGE" }] } });
+  const b = busta({ data: { arms: [{ name: "A", trades: 50, meanPct: 0.2, ic95: [-0.1, 0.5], verdict: "HOLDS" }] } });
   assert.equal(uno(controllaWalkforward(b)[0]), "disagrees");
 });
 
 test("a mean outside its own interval — MUST FAIL", () => {
-  const b = busta({ data: { bracci: [{ nome: "A", operazioni: 50, mediaPct: 9, ic95: [0.1, 0.5], esito: "NON_LO_SO" }] } });
+  const b = busta({ data: { arms: [{ name: "A", trades: 50, meanPct: 9, ic95: [0.1, 0.5], verdict: "NOT YET PROVEN" }] } });
   assert.equal(uno(controllaWalkforward(b)[0]), "disagrees");
 });
 
 test("an arm with no interval is could-not-look", () => {
-  const b = busta({ data: { bracci: [{ nome: "A", operazioni: 50, mediaPct: 0.2, esito: "NON_LO_SO" }] } });
+  const b = busta({ data: { arms: [{ name: "A", trades: 50, meanPct: 0.2, verdict: "NOT YET PROVEN" }] } });
   assert.equal(uno(controllaWalkforward(b)[0]), "unknown");
 });
 
 /* ── the circuit ─────────────────────────────────────────────────────────── */
 
 test("more burned than bought — MUST FAIL", () => {
-  const b = flywheel(); b.data.tokenBruciati = "0"; b.data.tokenComprati = "0";
+  const b = flywheel(); b.data.tokensBurned = "0"; b.data.tokensBought = "0";
   assert.equal(uno(controllaCircuito(b)[0]), "ok");
-  const c = flywheel(); c.data.tokenBruciati = "10"; c.data.tokenComprati = "3";
+  const c = flywheel(); c.data.tokensBurned = "10"; c.data.tokensBought = "3";
   assert.equal(uno(controllaCircuito(c)[0]), "disagrees");
 });
 
 test("spent plus pending over allocated — MUST FAIL", () => {
-  const c = flywheel(); c.data.allocatoEth = 1; c.data.eseguitoEth = 0.8; c.data.inSospesoEth = 0.5;
+  const c = flywheel(); c.data.allocatedEth = 1; c.data.spentEth = 0.8; c.data.pendingEth = 0.5;
   assert.equal(uno(controllaCircuito(c)[1]), "disagrees");
 });
 
 /* ── the anchored figures, which is the promise that was not being kept ──── */
 
-test("no /api/numeri.json served: could not look, and NEVER ok", () => {
+test("no /api/figures.json served: could not look, and NEVER ok", () => {
   const e = confrontaAncore(leggiAncore(pagina()), undefined);
   assert.equal(uno(e[0]), "unknown");
   assert.match(e[0].testo, /not served/);
@@ -168,28 +168,28 @@ test("no /api/numeri.json served: could not look, and NEVER ok", () => {
 });
 
 test("page figure outside the tolerance of its source — MUST FAIL", () => {
-  const html = pagina({ ancore: { "diploma-1-lancio": "4.10", "tassa-1-lancio": "0.017681" } });
+  const html = pagina({ ancore: { "graduation-rate-1-launch": "4.10", "curve-tax-1-launch": "0.017681" } });
   const e = confrontaAncore(leggiAncore(html), numeri());
   assert.equal(codiceUscita(e), 1);
   assert.match(e.find((x) => x.stato === "disagrees").testo, /page says 4\.1%, source says 1\.87%/);
 });
 
 test("page figure inside the tolerance agrees", () => {
-  const html = pagina({ ancore: { "diploma-1-lancio": "1.95", "tassa-1-lancio": "0.017681" } });
+  const html = pagina({ ancore: { "graduation-rate-1-launch": "1.95", "curve-tax-1-launch": "0.017681" } });
   assert.deepEqual(stati(confrontaAncore(leggiAncore(html), numeri())), ["ok", "ok"]);
 });
 
 test("a figure on the page with no entry in the endpoint — MUST FAIL", () => {
-  const html = pagina({ ancore: { "diploma-1-lancio": "1.87", "tassa-1-lancio": "0.017681", "inventato": "99" } });
+  const html = pagina({ ancore: { "graduation-rate-1-launch": "1.87", "curve-tax-1-launch": "0.017681", "inventato": "99" } });
   const e = confrontaAncore(leggiAncore(html), numeri());
   assert.equal(codiceUscita(e), 1);
-  assert.match(e.find((x) => x.stato === "disagrees").testo, /absent from \/api\/numeri\.json/);
+  assert.match(e.find((x) => x.stato === "disagrees").testo, /absent from \/api\/figures\.json/);
 });
 
 test("a figure in the endpoint anchored nowhere on the page — MUST FAIL", () => {
   /* The build that succeeded while silently dropping the block it should have
    * rendered. Counting anchors could never see this. */
-  const html = pagina({ ancore: { "diploma-1-lancio": "1.87" } });
+  const html = pagina({ ancore: { "graduation-rate-1-launch": "1.87" } });
   const e = confrontaAncore(leggiAncore(html), numeri());
   assert.equal(codiceUscita(e), 1);
   assert.match(e.find((x) => x.stato === "disagrees").testo, /anchored nowhere on the page/);
@@ -200,7 +200,7 @@ test("a page with no anchors at all — MUST FAIL", () => {
 });
 
 test("an anchor rendering a dash is could-not-look, not zero", () => {
-  const html = pagina({ ancore: { "diploma-1-lancio": "—", "tassa-1-lancio": "0.017681" } });
+  const html = pagina({ ancore: { "graduation-rate-1-launch": "—", "curve-tax-1-launch": "0.017681" } });
   const e = confrontaAncore(leggiAncore(html), numeri());
   assert.ok(e.some((x) => x.stato === "unknown"));
   assert.ok(!e.some((x) => x.stato === "disagrees"));
@@ -209,7 +209,7 @@ test("an anchor rendering a dash is could-not-look, not zero", () => {
 /* ── the verdict, the mode label, the declared share ─────────────────────── */
 
 test("the page's verdict contradicts the API's — MUST FAIL", () => {
-  const e = confrontaVerdetto(testoPagina(pagina({ verdetto: "HOLDS" })), walkforward("NON_LO_SO"));
+  const e = confrontaVerdetto(testoPagina(pagina({ verdetto: "HOLDS" })), walkforward("NOT YET PROVEN"));
   assert.equal(e.stato, "disagrees");
   assert.match(e.testo, /page says "HOLDS", API says "NOT YET PROVEN"/);
 });
@@ -221,8 +221,8 @@ test("the page states no verdict at all — MUST FAIL", () => {
 test("a HOLDS elsewhere on the page is not mistaken for the verdict", () => {
   /* The live page really does print HOLDS for the fixed-threshold test, which
    * is not the test that decides. Only the word after "Verdict" is the claim. */
-  assert.equal(uno(confrontaVerdetto(testoPagina(pagina()), walkforward("NON_LO_SO"))), "ok");
-  assert.equal(VERDETTI.NON_LO_SO, "NOT YET PROVEN");
+  assert.equal(uno(confrontaVerdetto(testoPagina(pagina()), walkforward("NOT YET PROVEN"))), "ok");
+  assert.ok(PAROLE_VERDETTO.includes("NOT YET PROVEN"));
 });
 
 test("PAPER in the API, no paper label on the page — MUST FAIL", () => {
@@ -273,7 +273,7 @@ test("two different shares declared on one page — MUST FAIL", () => {
 /* ── the whole run, and the ranking of its exit codes ────────────────────── */
 
 const sito = (extra = {}) => ({
-  buste: { status: status(), walkforward: walkforward(), flywheel: flywheel(), numeri: numeri(), ...extra },
+  buste: { status: status(), walkforward: walkforward(), flywheel: flywheel(), figures: numeri(), ...extra },
   html: pagina(), ora: ORA,
 });
 
@@ -294,8 +294,8 @@ test("a missing page is could-not-look, not a pass", () => {
 });
 
 test("a disagreement outranks both staleness and silence", () => {
-  const e = controllaTutto({ buste: { status: status(), walkforward: walkforward("REGGE"), flywheel: flywheel(), numeri: numeri() },
-    html: pagina({ ancore: { "diploma-1-lancio": "9.99", "tassa-1-lancio": "0.017681" } }),
+  const e = controllaTutto({ buste: { status: status(), walkforward: walkforward("HOLDS"), flywheel: flywheel(), figures: numeri() },
+    html: pagina({ ancore: { "graduation-rate-1-launch": "9.99", "curve-tax-1-launch": "0.017681" } }),
     ora: Date.parse("2026-09-17T12:00:00Z") });
   assert.equal(codiceUscita(e), 1);
 });

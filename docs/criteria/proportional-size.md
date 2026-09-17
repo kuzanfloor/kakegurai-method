@@ -154,6 +154,6 @@ published, and what this criterion inherits, is the walk-forward and the capacit
 ladder:
 
 ```bash
-curl -s https://kakegurai.xyz/api/capacita.json   | jq '.data.bracci[] | {nome, capacitaUsd, esito}'
-curl -s https://kakegurai.xyz/api/walkforward.json | jq '.data.bracci[] | {nome, operazioni, mediaPct, ic95, esito}'
+curl -s https://kakegurai.xyz/api/capacity.json   | jq '.data.arms[] | {name, capacityUsd, verdict}'
+curl -s https://kakegurai.xyz/api/walkforward.json | jq '.data.arms[] | {name, trades, meanPct, ic95, verdict}'
 ```

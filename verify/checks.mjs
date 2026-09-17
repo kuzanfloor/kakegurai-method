@@ -21,15 +21,15 @@
  * chosen so that it never fires is not a threshold. */
 export const ETA_MASSIMA_ORE = 26;
 
-/** The verdict names the API uses, and the words the page is allowed to print
- *  for each. `esito` is the field's real name in a running system. */
-export const VERDETTI = {
-  REGGE: "HOLDS",
-  NON_LO_SO: "NOT YET PROVEN",
-  NON_REGGE: "REJECTED",
-};
-
-const PAROLE_VERDETTO = Object.values(VERDETTI);
+/** The three verdict words, and they are the ONLY three. Until API version 2
+ *  this file carried a translation table from the Italian names the API used
+ *  — which meant a third party had to know the house vocabulary to read a
+ *  public endpoint, and the page and the API could drift into two words for
+ *  one state. The API now emits these words itself; this list is what the page
+ *  is allowed to print, nothing more.
+ *
+ *  ⚠️ A word outside this list is "could not look", never "fine". */
+export const PAROLE_VERDETTO = ["HOLDS", "NOT YET PROVEN", "REJECTED"];
 
 /* Four states, and the third and fourth are the point:
  *   ok        checked, and it agrees
@@ -95,25 +95,25 @@ export function controllaEta(nome, b, ora, oreMassime = ETA_MASSIMA_ORE) {
 export function controllaWalkforward(busta) {
   const w = busta?.data;
   if (!w) return [boh("walk-forward: not published, nothing to re-derive")];
-  if (!Array.isArray(w.bracci) || w.bracci.length === 0) return [boh("walk-forward: no arms published")];
+  if (!Array.isArray(w.arms) || w.arms.length === 0) return [boh("walk-forward: no arms published")];
   /* ⚠️ The interval is per ARM, not one per measurement: the first version of
    * this check looked for a single `ic` at the top and reported "nothing to
    * check the verdict against" on a payload that carries one interval per arm.
    * Before believing a verifier's complaint, read what the thing actually said. */
-  return w.bracci.map((b) => {
+  return w.arms.map((b) => {
     const ic = b.ic95 ?? b.ic;
-    const v = String(b.esito ?? "").toUpperCase();
-    if (!Array.isArray(ic) || ic.length !== 2) return boh(`walk-forward ${b.nome}: no interval`);
+    const v = String(b.verdict ?? "").toUpperCase();
+    if (!Array.isArray(ic) || ic.length !== 2) return boh(`walk-forward ${b.name}: no interval`);
     /* A verdict of HOLDS on an interval that crosses zero is a contradiction:
      * the interval is the thing the verdict is supposed to be about. */
-    if (v === "REGGE" && ic[0] <= 0 && ic[1] >= 0)
-      return no(`walk-forward ${b.nome}: says it holds, but [${ic[0].toFixed(4)}, ${ic[1].toFixed(4)}] crosses zero`);
+    if (v === "HOLDS" && ic[0] <= 0 && ic[1] >= 0)
+      return no(`walk-forward ${b.name}: says it holds, but [${ic[0].toFixed(4)}, ${ic[1].toFixed(4)}] crosses zero`);
     /* And the mean has to sit inside its own interval. If it does not, the two
      * were computed from different things, and at least one is not a measure. */
-    if (typeof b.mediaPct === "number" && (b.mediaPct < ic[0] || b.mediaPct > ic[1]))
-      return no(`walk-forward ${b.nome}: mean ${b.mediaPct.toFixed(4)} sits outside its own interval`);
-    return ok(`walk-forward ${b.nome}: "${VERDETTI[v] ?? v}" · ${b.operazioni} ops · ` +
-      `mean ${b.mediaPct.toFixed(4)}% in [${ic[0].toFixed(4)}, ${ic[1].toFixed(4)}]`);
+    if (typeof b.meanPct === "number" && (b.meanPct < ic[0] || b.meanPct > ic[1]))
+      return no(`walk-forward ${b.name}: mean ${b.meanPct.toFixed(4)} sits outside its own interval`);
+    return ok(`walk-forward ${b.name}: "${v}" · ${b.trades} ops · ` +
+      `mean ${b.meanPct.toFixed(4)}% in [${ic[0].toFixed(4)}, ${ic[1].toFixed(4)}]`);
   });
 }
 
@@ -122,14 +122,22 @@ export function controllaCircuito(busta) {
   const f = busta?.data;
   if (!f) return [boh("circuit: not published")];
   const esiti = [];
-  const comprati = BigInt(f.tokenComprati ?? "0");
-  const bruciati = BigInt(f.tokenBruciati ?? "0");
+  /* ⚠️ `?? "0"` would turn an ABSENT field into a passing check: zero burned of
+   * zero bought is exactly what a healthy circuit looks like today, so a
+   * renamed or dropped field would read as good news forever. Absent is "could
+   * not look", and it is a different sentence. */
+  if (f.tokensBought === undefined || f.tokensBurned === undefined)
+    return [boh("circuit: the API carries no bought/burned counters to compare")];
+  const comprati = BigInt(f.tokensBought);
+  const bruciati = BigInt(f.tokensBurned);
   esiti.push(bruciati > comprati
     ? no(`circuit: ${bruciati} burned but only ${comprati} bought`)
     : ok(`circuit: ${bruciati} burned of ${comprati} bought`));
   /* Allocated is not spent, and pending is not burned. Adding them would
    * publish a buyback that never happened. */
-  const alloc = Number(f.allocatoEth ?? 0), spesi = Number(f.eseguitoEth ?? 0), sosp = Number(f.inSospesoEth ?? 0);
+  if (f.allocatedEth === undefined || f.spentEth === undefined || f.pendingEth === undefined)
+    return [...esiti, boh("circuit: the API carries no allocated/spent/pending figures to compare")];
+  const alloc = Number(f.allocatedEth), spesi = Number(f.spentEth), sosp = Number(f.pendingEth);
   esiti.push(spesi + sosp > alloc + 1e-12
     ? no(`circuit: spent + pending (${spesi + sosp}) exceeds allocated (${alloc})`)
     : ok(`circuit: spent ${spesi} + pending ${sosp} within allocated ${alloc}`));
@@ -166,21 +174,21 @@ export function numeroDaTesto(testo) {
 }
 
 /* ── the anchored figures agree with the endpoint that sources them ──────── */
-export function confrontaAncore(ancore, bustaNumeri) {
+export function confrontaAncore(ancore, bustaFigure) {
   /* This is the promise the README makes in bold, and until 2026-09-14 the
    * tool COUNTED the anchors instead of comparing them: eight figures found,
    * eight figures unchecked, exit 0. The figures are cohort rates and curve
    * fees, and no endpoint carried them, so from outside the comparison was not
    * merely unwritten — it was impossible.
    *
-   * Until `/api/numeri.json` is served this reports "could not look" and the
+   * Until `/api/figures.json` is served this reports "could not look" and the
    * tool exits 2. Fail closed on what you cannot read. */
-  if (bustaNumeri === undefined)
-    return [boh("anchored figures: /api/numeri.json not served — the numbers on the page have no source to be checked against")];
-  const mappa = bustaNumeri?.data;
-  if (mappa === null) return [boh("anchored figures: /api/numeri.json declares it could not measure")];
+  if (bustaFigure === undefined)
+    return [boh("anchored figures: /api/figures.json not served — the numbers on the page have no source to be checked against")];
+  const mappa = bustaFigure?.data;
+  if (mappa === null) return [boh("anchored figures: /api/figures.json declares it could not measure")];
   if (!mappa || typeof mappa !== "object" || Array.isArray(mappa))
-    return [no("anchored figures: /api/numeri.json carries no map of figures — see docs/api.md for the contract")];
+    return [no("anchored figures: /api/figures.json carries no map of figures — see docs/api.md for the contract")];
   if (ancore.length === 0)
     return [no("page: no anchored figures found — the page publishes numbers the tool cannot locate")];
 
@@ -189,32 +197,32 @@ export function confrontaAncore(ancore, bustaNumeri) {
   for (const a of ancore) {
     visti.add(a.id);
     const atteso = mappa[a.id];
-    if (!atteso) { esiti.push(no(`${a.id}: shown on the page as "${a.testo}", absent from /api/numeri.json — a figure with no source`)); continue; }
-    const unita = atteso.unita ?? "";
+    if (!atteso) { esiti.push(no(`${a.id}: shown on the page as "${a.testo}", absent from /api/figures.json — a figure with no source`)); continue; }
+    const unita = atteso.unit ?? "";
     const v = numeroDaTesto(a.testo);
     if (v === null) { esiti.push(boh(`${a.id}: the page shows "${a.testo}", which is not a number`)); continue; }
-    if (typeof atteso.valore !== "number" || !Number.isFinite(atteso.valore)) {
-      esiti.push(boh(`${a.id}: /api/numeri.json carries no value to compare against`)); continue;
+    if (typeof atteso.value !== "number" || !Number.isFinite(atteso.value)) {
+      esiti.push(boh(`${a.id}: /api/figures.json carries no value to compare against`)); continue;
     }
-    const tolleranza = Number(atteso.tolleranza ?? 0);
-    const scarto = Math.abs(v - atteso.valore);
+    const tolleranza = Number(atteso.tolerance ?? 0);
+    const scarto = Math.abs(v - atteso.value);
     esiti.push(scarto <= tolleranza
-      ? ok(`${a.id}: page ${v}${unita} · source ${atteso.valore}${unita} · off by ${scarto.toPrecision(2)}, within ${tolleranza}`)
-      : no(`${a.id}: page says ${v}${unita}, source says ${atteso.valore}${unita} — off by ${scarto.toPrecision(3)}, tolerance ${tolleranza}`));
+      ? ok(`${a.id}: page ${v}${unita} · source ${atteso.value}${unita} · off by ${scarto.toPrecision(2)}, within ${tolleranza}`)
+      : no(`${a.id}: page says ${v}${unita}, source says ${atteso.value}${unita} — off by ${scarto.toPrecision(3)}, tolerance ${tolleranza}`));
   }
   /* The other direction, and it catches the build that succeeded while
    * silently dropping the block it was supposed to render. */
   for (const id of Object.keys(mappa))
-    if (!visti.has(id)) esiti.push(no(`${id}: carried by /api/numeri.json and anchored nowhere on the page`));
+    if (!visti.has(id)) esiti.push(no(`${id}: carried by /api/figures.json and anchored nowhere on the page`));
   return esiti;
 }
 
 /* ── the page prints the verdict the API reached ─────────────────────────── */
 export function confrontaVerdetto(testo, bustaWalkforward) {
-  const bracci = bustaWalkforward?.data?.bracci;
-  if (!Array.isArray(bracci) || bracci.length === 0) return boh("page verdict: the API publishes no verdict to compare against");
-  const attesi = [...new Set(bracci.map((b) => VERDETTI[String(b.esito).toUpperCase()]).filter(Boolean))];
-  if (attesi.length === 0) return boh(`page verdict: the API reports "${bracci[0].esito}", which this tool has no English word for`);
+  const arms = bustaWalkforward?.data?.arms;
+  if (!Array.isArray(arms) || arms.length === 0) return boh("page verdict: the API publishes no verdict to compare against");
+  const attesi = [...new Set(arms.map((b) => String(b.verdict ?? "").toUpperCase()).filter((v) => PAROLE_VERDETTO.includes(v)))];
+  if (attesi.length === 0) return boh(`page verdict: the API reports "${arms[0].verdict}", which is not one of the three verdict words`);
   const trovati = [...testo.matchAll(new RegExp(`\\bverdict\\b[^A-Za-z]{0,4}(${PAROLE_VERDETTO.join("|")})`, "gi"))]
     .map((m) => m[1].toUpperCase());
   /* A page that shows the number and drops the verdict is worse than a page
@@ -227,7 +235,7 @@ export function confrontaVerdetto(testo, bustaWalkforward) {
 
 /* ── the page's mode label matches the mode the agent is in ──────────────── */
 export function confrontaModo(testo, bustaStatus) {
-  const modo = bustaStatus?.data?.modo;
+  const modo = bustaStatus?.data?.mode;
   if (typeof modo !== "string") return boh("page mode: the API publishes no mode to compare against");
   const dicePaper = /paper mode|no real funds|paper/i.test(testo);
   if (modo.toUpperCase() === "PAPER")
@@ -239,9 +247,9 @@ export function confrontaModo(testo, bustaStatus) {
 
 /* ── the page's declared buyback share matches the policy ────────────────── */
 export function confrontaQuota(testo, bustaFlywheel) {
-  const p = bustaFlywheel?.data?.politica;
-  if (!p || typeof p.riacquistoBps !== "number") return boh("buyback share: the API publishes no policy to compare against");
-  const atteso = p.riacquistoBps / 100;
+  const p = bustaFlywheel?.data?.policy;
+  if (!p || typeof p.buybackBps !== "number") return boh("buyback share: the API publishes no policy to compare against");
+  const atteso = p.buybackBps / 100;
   /* Basis points are the policy; the page prints a percentage. The two have
    * disagreed in writing before — a README said "half of the remainder" for a
    * policy that is half of the TOTAL, which is a different and smaller number.
@@ -266,8 +274,8 @@ export function confrontaQuota(testo, bustaFlywheel) {
       (parla ? "claims a buyback without stating the share as a number attached to the claim" : "says nothing about a buyback"));
   }
   const sbagliate = dichiarate.filter((d) => Math.abs(d - atteso) >= 1e-9);
-  if (sbagliate.length > 0) return no(`buyback share: page says ${sbagliate[0]}%, policy says ${p.riacquistoBps} bps (${atteso}%)`);
-  return ok(`buyback share: ${dichiarate[0]}%, and the policy says ${p.riacquistoBps} bps`);
+  if (sbagliate.length > 0) return no(`buyback share: page says ${sbagliate[0]}%, policy says ${p.buybackBps} bps (${atteso}%)`);
+  return ok(`buyback share: ${dichiarate[0]}%, and the policy says ${p.buybackBps} bps`);
 }
 
 
@@ -276,7 +284,7 @@ export function confrontaQuota(testo, bustaFlywheel) {
 export function controllaTutto({ buste, html, ora, oreMassime = ETA_MASSIMA_ORE }) {
   const esiti = [];
   for (const [nome, b] of Object.entries(buste)) {
-    if (nome === "numeri") continue;
+    if (nome === "figures") continue;
     esiti.push(controllaBusta(nome, b));
     esiti.push(controllaEta(nome, b, ora, oreMassime));
   }
@@ -287,7 +295,7 @@ export function controllaTutto({ buste, html, ora, oreMassime = ETA_MASSIMA_ORE 
     return esiti;
   }
   const testo = testoPagina(html);
-  esiti.push(...confrontaAncore(leggiAncore(html), "numeri" in buste ? buste.numeri : undefined));
+  esiti.push(...confrontaAncore(leggiAncore(html), "figures" in buste ? buste.figures : undefined));
   esiti.push(confrontaVerdetto(testo, buste.walkforward));
   esiti.push(confrontaModo(testo, buste.status));
   esiti.push(confrontaQuota(testo, buste.flywheel));
