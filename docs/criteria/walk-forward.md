@@ -94,6 +94,20 @@ the thing itself: **is the reference moving?** On a real session it takes about
 250 distinct values in a day. On that day it took one. A frozen reference is not
 *no deviation* — it is *no answer*, and those are different sentences.
 
+## Resolved — 2026-09-16
+
+The fourth gate became readable at the seventh out-of-sample day, and with all
+four readable the verdict is **HOLDS**: positive on every out-of-sample day, on a
+book of days the threshold selection had never seen.
+
+🔴 **It authorises nothing, and that was written above before the run.** Passing
+makes the direction a *candidate*. The criterion asks for the measurement to be
+repeated after **five more trading days** from that date before promotion is even
+discussed, so the agent stays on paper and `0` of `8` strategies are switched on.
+
+The day count and the trade count keep growing, so they are not quoted here —
+read them from the endpoint below, and check the verdict follows from them.
+
 ## Reproduce it
 
 ```bash

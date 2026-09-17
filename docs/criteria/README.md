@@ -6,7 +6,7 @@ measurement it judges was run.
 
 | criterion | question | verdict | published here |
 |---|---|---|---|
-| [`walk-forward.md`](walk-forward.md) | does a threshold chosen on the past still pay on a day it has not seen? | **NOT YET PROVEN** — three gates of four pass, the fourth cannot be read yet | in full |
+| [`walk-forward.md`](walk-forward.md) | does a threshold chosen on the past still pay on a day it has not seen? | **HOLDS** since 2026-09-16, when the fourth gate became readable — and it authorises nothing | in full |
 | [`capacity.md`](capacity.md) | at what trade size does the measured edge die? | **HOLDS**, and the capacity is small | in full |
 | [`proportional-size.md`](proportional-size.md) | does sizing by a fraction of each pool beat one fixed size? | **HOLDS** | in full, minus the daily gross figures |
 | the deployer-profit filter | does avoiding one class of launcher change the RETURN, or only a statistic? | run not finished | **withheld — see below** |

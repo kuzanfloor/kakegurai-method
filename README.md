@@ -187,6 +187,13 @@ no contract address exists, and this section describes a mechanism that is built
 and tested rather than one that is running. Saying so here costs nothing and is
 the difference between a plan and a claim.
 
+**And the desk is not funded by launching it.** Before deploying anything on this
+chain we measured whether launching there pays the launcher: it does not — curve
+fees never reach the deployer, and the median curve generates four thousandths of
+an ETH in its whole life. Six checks, a declared falsification, and the parts you
+cannot check from here are listed as such:
+[`docs/deployer-fees.md`](docs/deployer-fees.md).
+
 When it exists, it works like this, and the share is declared rather than
 described:
 
@@ -245,6 +252,8 @@ docs/criteria/          the pre-registered criteria, one file per measurement,
                         plus what is withheld and why
 docs/api.md             the contract of the public endpoints, and what the
                         verifier expects of each
+docs/deployer-fees.md   whether launching on this chain pays the launcher, and
+                        which parts of that answer you can check yourself
 verify/check.mjs        pulls the live API and the page, and reports. Zero deps
 verify/checks.mjs       the comparisons, as pure functions of (API, page, clock)
 verify/checks.test.mjs  a forged page per comparison, proving each one can fail
