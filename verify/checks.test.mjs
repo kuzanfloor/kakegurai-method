@@ -26,9 +26,17 @@ const VECCHIO = "2026-09-11T21:35:00.000Z";   // ~62 h old, a Friday close read 
 const busta = (extra = {}) => ({ generated: RECENTE, version: "1", source: "test",
   confidence: "high", dataAgeSec: 12, data: {}, ...extra });
 
-const walkforward = (verdict = "NOT YET PROVEN") => busta({ data: { arms: [
-  { name: "B — all 37", trades: 266, meanPct: 0.7394, ic95: [0.5985, 0.8355], verdict },
-] } });
+/* ⚠️ La busta porta ANCHE `deployedRule`, e non e' arredamento del fixture:
+ * dal 19/09 l'API lo pubblica e i documenti lo affermano, quindi una busta che
+ * lo omette e' una busta vecchia — e `controllaRegolaDistribuita` la boccia di
+ * proposito. Aggiungerlo qui e' stato il modo in cui ho scoperto che i tre test
+ * di `controllaTutto` misuravano un payload che non esiste piu'. */
+const walkforward = (verdict = "NOT YET PROVEN") => busta({ data: {
+  arms: [{ name: "B — all 37", trades: 266, meanPct: 0.7394, ic95: [0.5985, 0.8355], verdict }],
+  deployedRule: { arms: [
+    { name: "B — all 37", trades: 1839, meanPct: 0.3485, ci95: [0.3123, 0.3773], verdict: "SUPPORTED" },
+  ] },
+} });
 
 const flywheel = (policy = { buybackBps: 3000, bankrollBps: 5000, operatingBps: 2000 }) => busta({ data: {
   mode: "PAPER", tokensBought: "0", tokensBurned: "0",
@@ -308,3 +316,32 @@ test("the whole tool, sabotaged three ways at once, rejects", () => {
   assert.equal(rotti.length, 3);
   assert.equal(codiceUscita(e), 1);
 });
+
+/* ── the deployed rule ───────────────────────────────────────────────────── */
+{
+  const { controllaRegolaDistribuita } = await import("./checks.mjs");
+  const sel = { name: "B — all 37", trades: 558, meanPct: 0.7464, ic95: [0.6538, 0.8317], verdict: "HOLDS" };
+  const busta = (dep) => ({ data: { arms: [sel], ...(dep ? { deployedRule: { arms: [dep] } } : {}) } });
+  const esiti = (b) => controllaRegolaDistribuita(b).map((e) => e.stato ?? e.esito ?? e.kind ?? JSON.stringify(e));
+
+  // il caso vero: fisso a circa metà del selezionato
+  const buono = { name: "B — all 37", trades: 1839, meanPct: 0.3485, ci95: [0.3123, 0.3773], verdict: "SUPPORTED" };
+  assert.ok(JSON.stringify(controllaRegolaDistribuita(busta(buono))).includes("1839"),
+    "il controllo deve nominare le operazioni della regola distribuita");
+
+  // ⛔ il claim c'è nei docs e l'API non lo pubblica: deve BOCCIARE
+  assert.ok(JSON.stringify(controllaRegolaDistribuita(busta(null))).toLowerCase().includes("does not publish"),
+    "senza deployedRule il verificatore deve bocciare, non passare");
+
+  // ⛔ il fisso non può superare il selezionato
+  const troppo = { ...buono, meanPct: 0.9 , ci95: [0.8, 1.0] };
+  assert.ok(JSON.stringify(controllaRegolaDistribuita(busta(troppo))).includes("cannot out-pay"),
+    "un fisso maggiore del selezionato deve essere bocciato");
+
+  // ⛔ media fuori dal proprio intervallo
+  const incoerente = { ...buono, meanPct: 0.9 };
+  assert.ok(JSON.stringify(controllaRegolaDistribuita(busta(incoerente))).includes("outside its own interval"),
+    "una media fuori dal suo intervallo deve essere bocciata");
+
+  console.log("  ok  deployed rule: 4 casi");
+}

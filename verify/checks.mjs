@@ -117,6 +117,51 @@ export function controllaWalkforward(busta) {
   });
 }
 
+/* ── the deployed rule: the number that actually runs ────────────────────── */
+/* 🔴 WHY THIS EXISTS. On 19 September the method docs started claiming that the
+ * rule as deployed pays about HALF the headline walk-forward figure. The claim
+ * went in and this verifier could not check it — which is the exact defect
+ * finding 5 of the adversarial audit was about, recreated hours after it was
+ * declared closed. A claim that cannot be re-derived on a page whose whole
+ * proposition is re-derivation is worse than a claim not made.
+ *
+ * ⚠️ It checks the RELATION, not a hardcoded number. Pinning 0.3485 here would
+ * turn every honest re-measurement into a red light, and a check that cries on
+ * correct behaviour gets switched off — so the thing asserted is: the deployed
+ * rule is published, it is internally consistent, and it is NOT LARGER than the
+ * selected-threshold figure. That last one is the whole point: a maximum picked
+ * out of several candidates cannot be paid by a fixed rule, so if the deployed
+ * number ever comes out higher, something is wrong with the measurement and not
+ * with the market. */
+export function controllaRegolaDistribuita(busta) {
+  const w = busta?.data;
+  if (!w) return [boh("deployed rule: walk-forward not published")];
+  const d = w.deployedRule;
+  if (!d) return [no("deployed rule: the docs claim a deployed figure and the API does not publish one")];
+  if (!Array.isArray(d.arms) || d.arms.length === 0) return [boh("deployed rule: no arms published")];
+
+  const perNome = new Map((Array.isArray(w.arms) ? w.arms : []).map((b) => [b.name, b]));
+  return d.arms.map((b) => {
+    const ic = b.ci95 ?? b.ic95 ?? b.ic;
+    if (!Array.isArray(ic) || ic.length !== 2) return boh(`deployed rule ${b.name}: no interval`);
+    if (typeof b.meanPct !== "number") return boh(`deployed rule ${b.name}: no mean`);
+    if (b.meanPct < ic[0] || b.meanPct > ic[1])
+      return no(`deployed rule ${b.name}: mean ${b.meanPct.toFixed(4)} sits outside its own interval`);
+    const v = String(b.verdict ?? "").toUpperCase();
+    if (v === "SUPPORTED" && ic[0] <= 0 && ic[1] >= 0)
+      return no(`deployed rule ${b.name}: says supported, but [${ic[0].toFixed(4)}, ${ic[1].toFixed(4)}] crosses zero`);
+
+    const sel = perNome.get(b.name);
+    if (sel && typeof sel.meanPct === "number" && b.meanPct > sel.meanPct)
+      return no(`deployed rule ${b.name}: fixed ${b.meanPct.toFixed(4)}% exceeds selected ${sel.meanPct.toFixed(4)}% — ` +
+        `a fixed rule cannot out-pay a maximum chosen from candidates, so one of the two is not a measurement`);
+
+    const rapporto = sel && typeof sel.meanPct === "number" && sel.meanPct > 0
+      ? ` · ${(b.meanPct / sel.meanPct * 100).toFixed(0)}% of the selected figure` : "";
+    return ok(`deployed rule ${b.name}: "${v}" · ${b.trades} ops · mean ${b.meanPct.toFixed(4)}%${rapporto}`);
+  });
+}
+
 /* ── the circuit never reports more burned than bought ───────────────────── */
 export function controllaCircuito(busta) {
   const f = busta?.data;
@@ -289,6 +334,7 @@ export function controllaTutto({ buste, html, ora, oreMassime = ETA_MASSIMA_ORE 
     esiti.push(controllaEta(nome, b, ora, oreMassime));
   }
   esiti.push(...controllaWalkforward(buste.walkforward));
+  esiti.push(...controllaRegolaDistribuita(buste.walkforward));
   esiti.push(...controllaCircuito(buste.flywheel));
   if (html === null || html === undefined) {
     esiti.push(boh("page: not served, nothing to compare the API against"));
