@@ -39,6 +39,8 @@ verdict *further away* — from two more trading days needed to three. Both
 directions were reported. A correction that improves your own number and shortens
 your own wait is the one you should not be allowed to make.
 
+> 🔴 **19 September:** re-measured, that procedure still holds (+0.7464%, 558 out-of-sample operations). But it **selects** the threshold from candidates, and the deployed code uses a **fixed** one — measured as deployed the figure is **+0.3485% over 1,839 operations**, about half. See `criteria/walk-forward.md`. The rule that runs must be the rule that was measured.
+
 ## 2. `null` is never published as `0`
 
 Every figure travels in an envelope:

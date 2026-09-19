@@ -62,6 +62,27 @@ Stated before the run, because this is the half people leave out:
 | the 10 seed tickers | 50 | +0.5863% | [0.3489, 0.8784] | 4 of 4 |
 | all 37 instruments | 266 | +0.7394% | [0.5985, 0.8355] | 4 of 4 |
 
+> 🔴 **Read this before quoting the figure above.** Re-measured on 19 September
+> the same procedure gives **+0.7464% over 558 out-of-sample operations, 9 of 9
+> positive days** — it held. But that procedure **selects** the entry threshold
+> out of several candidates by looking at the past, and **the deployed code does
+> not select anything**: it uses one fixed threshold.
+>
+> Measured as deployed — no selection, so every day is out of sample by
+> construction — the figure is **+0.3485% over 1,839 operations, CI [0.3123,
+> 0.3773], positive on 10 of 10 days**. It holds on its own, over three times the
+> operations, and it is **about half** of the number in the table.
+>
+> A maximum picked out of several candidates is not what a fixed rule pays.
+> Capital sized on the larger number is sized on a rule that does not run. Both
+> figures are published side by side at `/api/walkforward.json` (`deployedRule`),
+> and the criterion for the second measurement was committed **before** it ran.
+>
+> ⛔ Neither threshold value is published, here or anywhere: on this chain a
+> published entry threshold is an instruction for copying the only advantage
+> there is. What is published is that one is selected and one is fixed, and what
+> each pays.
+
 Three of four gates pass. The fourth — concentration — **cannot be read** with
 only 4 out-of-sample days, because at uniform contribution the days-to-half is
 `ceil(N/2)`, so below 7 days the floor of 3 is measuring *N* and not
